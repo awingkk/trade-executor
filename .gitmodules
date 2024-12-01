@@ -8,5 +8,5 @@
 	ignore = dirty
 [submodule "deps/web3-ethereum-defi"]
 	path = deps/web3-ethereum-defi
-	url = https://github.com/tradingstrategy-ai/web3-ethereum-defi.git
+	url = https://github.com/awingkk/web3-ethereum-defi.git
 	ignore = dirty
