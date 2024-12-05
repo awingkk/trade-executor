@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "trade-executor"
-version = "0.3.1"
-description = "Algorithmic trading backtesting and live trading engine for decentralised finance"
-authors = ["Mikko Ohtamaa <mikko@tradingstrategy.ai>"]
+version = "0.3.1-solana"
+description = "Algorithmic trading backtesting and live trading engine for decentralised finance. Add support for Solana chain."
+authors = ["Mikko Ohtamaa <mikko@tradingstrategy.ai>", "Awing KK <awingkk@proton.me>"]
 homepage = "https://tradingstrategy.ai"
-repository = "https://github.com/tradingstrategy-ai/trade-executor"
+repository = "https://github.com/awingkk/trade-executor"
 license = "APGL"
 readme = "README.md"
-keywords = ["algorithmic trading", "ethereum", "cryptocurrency", "uniswap", "quantitative finance", "binance", "coinbase", "pancakeswap"]
+keywords = ["algorithmic trading", "ethereum", "cryptocurrency", "uniswap", "quantitative finance", "binance", "coinbase", "pancakeswap", "solana"]
 packages = [
     { include = "tradeexecutor" },
 ]
@@ -118,6 +118,13 @@ pytest-timeout = "^2.3.1"
 
 # https://github.com/arynyklas/telegram_bot_logger/pull/1
 telegram-bot-logger = {git = "https://github.com/tradingstrategy-ai/telegram_bot_logger.git", branch="patch-bleeding-edges", optional = true}
+
+#
+# Solana
+#
+solana = "^0.35.1"
+solders = "^0.21.0"
+
 
 [tool.poetry.extras]
 
