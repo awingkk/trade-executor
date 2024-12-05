@@ -18,6 +18,8 @@ from spl.token.constants import TOKEN_PROGRAM_ID
 from tradeexecutor.solana.test_validator import TestValidatorLaunch, launch_test_validator
 from tradeexecutor.state.identifier import AssetIdentifier
 
+from solana_tests.solana_utils import assert_valid_response
+
 
 @pytest.fixture()
 def payer() -> Keypair:
@@ -63,7 +65,7 @@ def sol() -> AssetIdentifier:
 def usdc_account_file(payer, tmp_path_factory):
     """Change the mint authority of USDC mint account to payer, and save the account to temp file.
     """
-    usdc = json.load(open("tests/solana/usdc.json"))
+    usdc = json.load(open("tests/solana_tests/usdc.json"))
     data = bytearray(base64.b64decode(usdc["account"]["data"][0]))
     data[4:4+32] = base58.b58decode(str(payer.pubkey()))
     usdc["account"]["data"][0] = base64.b64encode(data).decode("utf8")
@@ -90,13 +92,17 @@ def validator(payer, hot_wallet, usdc_account_file, tmp_path_factory) -> TestVal
 
     # airdrop
     tx = client.request_airdrop(payer.pubkey(), 1_000_000_000)
+    assert_valid_response(tx)
     client.confirm_transaction(tx.value)
     balance = client.get_balance(payer.pubkey())
+    assert_valid_response(balance)
     assert balance.value == 1_000_000_000
 
     tx = client.request_airdrop(hot_wallet, 1_000_000_000)
+    assert_valid_response(tx)
     client.confirm_transaction(tx.value)
     balance = client.get_balance(hot_wallet)
+    assert_valid_response(balance)
     assert balance.value == 1_000_000_000
 
     try:
@@ -136,6 +142,7 @@ def usdc_token(client, payer, hot_wallet, usdc) -> Token:
             # mint USDC
             opts = TxOpts(skip_confirmation=False, preflight_commitment=Processed)
             tx = token.mint_to(acc, payer, amount, opts)
+            assert_valid_response(tx)
             client.confirm_transaction(tx.value)
             acc_info = token.get_account_info(acc)
             assert acc_info.amount == amount
@@ -146,6 +153,7 @@ def usdc_token(client, payer, hot_wallet, usdc) -> Token:
 @pytest.fixture()
 def payer_usdc_account(usdc_token, payer):
     resp = usdc_token.get_accounts_by_owner(payer.pubkey())
+    assert_valid_response(resp)
     assert len(resp.value) > 0
     acc = resp.value[0]
     return acc.pubkey
@@ -154,6 +162,7 @@ def payer_usdc_account(usdc_token, payer):
 @pytest.fixture()
 def hot_wallet_usdc_account(usdc_token, hot_wallet):
     resp = usdc_token.get_accounts_by_owner(hot_wallet)
+    assert_valid_response(resp)
     assert len(resp.value) > 0
     acc = resp.value[0]
     return acc.pubkey
