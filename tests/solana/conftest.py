@@ -82,7 +82,7 @@ def validator(payer, hot_wallet, usdc_account_file, tmp_path_factory) -> TestVal
     ledger_path = str(tmp_path_factory.getbasetemp().joinpath("test-ledger-trade-execute"))
 
     validator = launch_test_validator(
-        fork_url="https://solana-mainnet.g.alchemy.com/v2/Re6f1F37EmnRzugFxQK-k0-aRzdLx5bE",
+        fork_url="https://api.devnet.solana.com",
         ledger=ledger_path,
         account_file=usdc_account_file,
     )
