@@ -4,7 +4,7 @@
 import datetime
 from typing import List
 import base64, base58, json
-import shutil
+import shutil, os
 
 import pytest
 from solders.keypair import Keypair
@@ -19,6 +19,12 @@ from tradeexecutor.solana.test_validator import TestValidatorLaunch, launch_test
 from tradeexecutor.state.identifier import AssetIdentifier
 
 from solana_tests.solana_utils import assert_valid_response
+
+
+pytestmark = pytest.mark.skipif(
+    (os.environ.get("SOLANA_CHAIN_JSON_RPC") is None) or (shutil.which("solana-test-validator") is None),
+    reason="Set SOLANA_CHAIN_JSON_RPC env install solana-test-validator command to run these tests",
+)
 
 
 @pytest.fixture()
@@ -84,7 +90,7 @@ def validator(payer, hot_wallet, usdc_account_file, tmp_path_factory) -> TestVal
     ledger_path = str(tmp_path_factory.getbasetemp().joinpath("test-ledger-trade-execute"))
 
     validator = launch_test_validator(
-        fork_url="https://api.devnet.solana.com",
+        fork_url=os.environ.get("SOLANA_CHAIN_JSON_RPC"),
         ledger=ledger_path,
         account_file=usdc_account_file,
     )
