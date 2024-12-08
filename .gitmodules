@@ -4,7 +4,7 @@
 	ignore = dirty
 [submodule "deps/trading-strategy"]
 	path = deps/trading-strategy
-	url = https://github.com/tradingstrategy-ai/trading-strategy.git
+	url = https://github.com/awingkk/trading-strategy.git
 	ignore = dirty
 [submodule "deps/web3-ethereum-defi"]
 	path = deps/web3-ethereum-defi
