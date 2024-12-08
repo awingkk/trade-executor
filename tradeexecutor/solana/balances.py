@@ -6,7 +6,6 @@ from typing import Dict, Set
 from solders.pubkey import Pubkey
 from solana.rpc.types import TokenAccountOpts
 from solana.rpc.api import Client
-from solana.exceptions import SolanaRpcException
 
 # TODO: Move to Non-ETH package
 from eth_defi.balances import DecimalisedHolding
