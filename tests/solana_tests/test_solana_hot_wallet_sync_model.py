@@ -23,7 +23,6 @@ def hot_wallet_obj(client, hot_wallet, payer) -> HotWallet:
     Top is up with some gas money and 500 USDC.
     """
     wallet = HotWallet(hot_wallet, payer)
-    wallet.sync_nonce(client)
     return wallet
 
 
