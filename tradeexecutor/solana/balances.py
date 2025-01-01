@@ -22,6 +22,10 @@ def fetch_token_details(
     return info
 
 
+def convert_to_decimals(amount, decimals):
+    return Decimal(amount) / Decimal(10**decimals)    
+
+
 def fetch_balances_by_token_list(
     client: Client,
     owner: Pubkey,
@@ -49,7 +53,7 @@ def fetch_balances_by_token_list(
             raw_amount = int(data["info"]["tokenAmount"]["amount"])
         if decimalise:
             info = fetch_token_details(client, pubkey)
-            balances[pubkey] = Decimal(raw_amount) / Decimal(10**info["decimals"])
+            balances[pubkey] = convert_to_decimals(raw_amount, info["decimals"])
         else:
             balances[pubkey] = raw_amount
 
@@ -91,6 +95,6 @@ def convert_balances_to_decimal(
         if require_decimals:
             assert decimals > 0, f"Token decimals did not return a good value: {pubkey}"
 
-        res[pubkey] = DecimalisedHolding(Decimal(raw_balance) / Decimal(10**decimals), decimals, None)
+        res[pubkey] = DecimalisedHolding(convert_to_decimals(raw_balance, decimals), decimals, None)
 
     return res

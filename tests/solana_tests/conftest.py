@@ -5,6 +5,7 @@ import datetime
 from typing import List
 import base64, base58, json
 import shutil, os
+import logging
 
 import pytest
 from solders.keypair import Keypair
@@ -26,6 +27,9 @@ pytestmark = pytest.mark.skipif(
     reason="Set SOLANA_CHAIN_JSON_RPC env install solana-test-validator command to run these tests",
 )
 
+httpx_logger = logging.getLogger("httpx")
+httpx_logger.setLevel(logging.WARNING)
+
 
 @pytest.fixture()
 def payer() -> Keypair:
@@ -46,8 +50,7 @@ def hot_wallet() -> Pubkey:
 
 
 @pytest.fixture
-def usdc() -> AssetIdentifier:
-    """Mock some assets"""
+def usdc_asset() -> AssetIdentifier:
     usdc_mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     key = Pubkey.from_string(usdc_mint)
     usdc_hex = "0x" + bytes(key).hex()
@@ -57,8 +60,7 @@ def usdc() -> AssetIdentifier:
 
 
 @pytest.fixture
-def sol() -> AssetIdentifier:
-    """Mock some assets"""
+def sol_asset() -> AssetIdentifier:
     sol_mint = "So11111111111111111111111111111111111111112"
     key = Pubkey.from_string(sol_mint)
     sol_hex = "0x" + bytes(key).hex()
@@ -82,7 +84,33 @@ def usdc_account_file(payer, tmp_path_factory):
 
 
 @pytest.fixture()
-def validator(payer, hot_wallet, usdc_account_file, tmp_path_factory) -> TestValidatorLaunch:
+def clone_accounts():
+    return [
+        "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8", # Raydium Liquidity Pool V4
+
+        "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2", # Raydium (SOL-USDC) Pool
+        "8BnEgHoWFysVcuFFX7QztDmzuH8r5ZFvyP3sYwn1XTh6", # Raydium (SOL-USDC) Market
+        "CKxTHwM9fPMRRvZmFnFoqKNd9pQR21c5Aq9bh5h9oghX", # Openbook (SOL-USDC) Pool 1
+        "DQyrAcCrDXQ7NeoqGgDCZwBvWDcYmFCjSb9JtteuvPpz", # Raydium (SOL-USDC) Pool 1
+        "HLmqeL62xR1QoZ1HKKbXRrdN1p3phKpxRMb2VVopvBBz", # Raydium (SOL-USDC) Pool 2
+
+        "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA", # Raydium (RAY-SOL) Pool
+        "C6tp2RVZnxBPFbnAsfTjis8BN9tycESAT4SgDQgbbrsA", # Raydium (RAY-SOL) Market
+        "6U6U59zmFWrPSzm9sLX7kVkaK78Kz7XJYkrhP1DjF3uF", #
+        "Em6rHi68trYgBFyJ5261A2nhwuQWfLcirgzZZYoRcrkX", # Raydium (RAY-SOL) Pool 1
+        "3mEFzHsJyu2Cpjrz6zPmTzP7uoLFj9SbbecGVzzkL1mJ", # Raydium (RAY-SOL) Pool 2
+        "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", # Ray Mint
+    ]
+
+@pytest.fixture()
+def clone_programs():
+    return [
+        "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8" # Raydium Liquidity Pool V4
+    ]
+
+
+@pytest.fixture()
+def validator(payer, hot_wallet, usdc_account_file, clone_accounts, clone_programs, tmp_path_factory) -> TestValidatorLaunch:
     """Set up the Test Validator, and request airdrop to two account.
 
     Also perform the Test Validator state reset for each test.
@@ -93,23 +121,26 @@ def validator(payer, hot_wallet, usdc_account_file, tmp_path_factory) -> TestVal
         fork_url=os.environ.get("SOLANA_CHAIN_JSON_RPC"),
         ledger=ledger_path,
         account_file=usdc_account_file,
+        clone_accounts=clone_accounts,
+        clone_programs=clone_programs,
     )
     client = Client("http://127.0.0.1:8899", commitment=Confirmed)
 
     # airdrop
-    tx = client.request_airdrop(payer.pubkey(), 1_000_000_000)
+    airdrop_amount = 1000 * 10**9
+    tx = client.request_airdrop(payer.pubkey(), airdrop_amount)
     assert_valid_response(tx)
     client.confirm_transaction(tx.value)
     balance = client.get_balance(payer.pubkey())
     assert_valid_response(balance)
-    assert balance.value == 1_000_000_000
+    assert balance.value == airdrop_amount
 
-    tx = client.request_airdrop(hot_wallet, 1_000_000_000)
+    tx = client.request_airdrop(hot_wallet, airdrop_amount)
     assert_valid_response(tx)
     client.confirm_transaction(tx.value)
     balance = client.get_balance(hot_wallet)
     assert_valid_response(balance)
-    assert balance.value == 1_000_000_000
+    assert balance.value == airdrop_amount
 
     try:
         yield validator
@@ -127,8 +158,8 @@ def client(validator: TestValidatorLaunch) -> Client:
 
 
 @pytest.fixture()
-def usdc_token(client, payer, hot_wallet, usdc) -> Token:
-    token = Token(client, usdc.other_data["Pubkey"], TOKEN_PROGRAM_ID, payer)
+def usdc_token(client, payer, hot_wallet, usdc_asset) -> Token:
+    token = Token(client, usdc_asset.other_data["Pubkey"], TOKEN_PROGRAM_ID, payer)
     mint_info = token.get_mint_info()
     assert mint_info.mint_authority == payer.pubkey()
 
@@ -140,7 +171,7 @@ def usdc_token(client, payer, hot_wallet, usdc) -> Token:
         # create token account
         acc = token.create_associated_token_account(user)
         acc_info = token.get_account_info(acc)
-        assert acc_info.mint == usdc.other_data["Pubkey"]
+        assert acc_info.mint == usdc_asset.other_data["Pubkey"]
         assert acc_info.owner == user
         assert acc_info.amount == 0
 
@@ -181,6 +212,6 @@ def start_ts() -> datetime.datetime:
 
 
 @pytest.fixture
-def supported_reserves(usdc) -> List[AssetIdentifier]:
+def supported_reserves(usdc_asset) -> List[AssetIdentifier]:
     """Timestamp of action started"""
-    return [usdc]
+    return [usdc_asset]

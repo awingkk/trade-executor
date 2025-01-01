@@ -244,6 +244,17 @@ class TransactionBuilder(ABC):
         """
 
     @abstractmethod
+    def get_token_delivery_address(self) -> Pubkey:
+        """Get the target address for token delivery.
+
+        Where do Dex should send the tokens after a swap.
+        """
+
+    @abstractmethod
+    def get_token_account(self, token_pubkey: Pubkey) -> Pubkey:
+        """Get the address that holds token supply"""
+
+    @abstractmethod
     def get_fees_wallet_address(self) -> Pubkey:
         """Get the address that holds native token for fees"""
 
@@ -275,6 +286,15 @@ class HotWalletTransactionBuilder(TransactionBuilder):
     def init(self):
         pass
 
+    def get_token_delivery_address(self) -> Keypair:
+        """Get the target address for token delivery."""
+        return self.hot_wallet.account
+
+    def get_token_account(self, token_pubkey: Pubkey) -> Pubkey:
+        """Get the address that holds token supply"""
+        # TODO: multi tokens in one wallet
+        return self.hot_wallet.account
+
     def get_fees_wallet_address(self) -> Pubkey:
         """Get the address that holds native token for fees"""
         return self.hot_wallet.address
@@ -289,28 +309,31 @@ class HotWalletTransactionBuilder(TransactionBuilder):
     def sign_transaction(
             self,
             ix_list: list[Instruction],
-            compute_unit_limit: Optional[int] = None,
+            compute_unit_limit: Optional[int] = 200_000,
             priority_fee_suggestion: Optional[int] = None,
             notes: str = "",
     ) -> BlockchainTransaction:
         """Sign a transaction with the hot wallet private key."""
 
         ix_list_ = []
+        has_compute_budget = False
+        for ix in ix_list:
+            if ix.program_id == Pubkey.from_string("ComputeBudget111111111111111111111111111111"):
+                has_compute_budget = True
 
-        if compute_unit_limit is not None:
+        if not has_compute_budget:
             if compute_unit_limit > 1_400_000:
                 compute_unit_limit = 1_400_000
-
             ix_list_.append(set_compute_unit_limit(compute_unit_limit))
-        else:
-            compute_unit_limit = 200_000
 
-        if priority_fee_suggestion is not None:
-            ix_list_.append(set_compute_unit_price(priority_fee_suggestion))
+            if priority_fee_suggestion is not None:
+                ix_list_.append(set_compute_unit_price(priority_fee_suggestion))
+            else:
+                # priority_fee_suggestion = self.fetch_fee_suggestion(ix_list)
+                # priority_fee_suggestion -= 5000
+                # ix_list_new.append(set_compute_unit_price(priority_fee_suggestion))
+                priority_fee_suggestion = 0
         else:
-            # priority_fee_suggestion = self.fetch_fee_suggestion(ix_list)
-            # priority_fee_suggestion -= 5000
-            # ix_list_new.append(set_compute_unit_price(priority_fee_suggestion))
             priority_fee_suggestion = 0
 
         ix_list_.extend(ix_list)

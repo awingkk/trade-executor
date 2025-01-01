@@ -23,13 +23,14 @@ from typing import Optional
 
 import psutil
 import requests
+from httpx import ConnectError
 
 # TODO: Move to Non-ETH package
 from eth_defi.utils import is_localhost_port_listening, shutdown_hard
 
 from solana.rpc.api import Client
 from solana.rpc.commitment import Processed
-
+from solana.exceptions import SolanaRpcException
 
 logger = logging.getLogger(__name__)
 
@@ -103,10 +104,12 @@ def launch_test_validator(
     fork_url: Optional[str] = None,
     ledger: str = "~/test-ledger",
     account_file: str = None,
+    clone_accounts: list[str] = [],
+    clone_programs: list[str] = [],
     cmd="solana-test-validator",
     port: int = 8899,
     launch_wait_seconds=20.0,
-    attempts=3,
+    attempts=1,
     test_request_timeout=3.0,
 ) -> TestValidatorLaunch:
     """Creates Test Validator unit test backend or mainnet fork.
@@ -169,6 +172,10 @@ def launch_test_validator(
     ]
     if account_file is not None:
         args.extend(["--account", "-", account_file])
+    for a in clone_accounts:
+        args.extend(["--clone", a])
+    for p in clone_programs:
+        args.extend(["--clone-upgradeable-program", p])
 
     latest_slot = version = None
 
@@ -191,10 +198,16 @@ def launch_test_validator(
                 latest_slot = client.get_slot(Processed).value
                 break
             except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
-                logger.info("Test Validator not ready, got exception %s", e)
+                # logger.info("Test Validator not ready, got exception %s", e.error_msg)
                 # requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(54, 'Connection reset by peer'))
                 time.sleep(0.1)
                 continue
+            except SolanaRpcException as e:
+                if isinstance(e.__cause__, ConnectError):
+                    time.sleep(0.1)
+                    continue
+                # logger.info("Test Validator got exception: " + e.error_msg)
+                raise
 
         if latest_slot is None:
             logger.error("Could not read the latest block from Test Validator %s within %f seconds, shutting down and dumping output", url, launch_wait_seconds)

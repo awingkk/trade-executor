@@ -47,7 +47,7 @@ def test_hot_wallet_sync_model_deposit(
     client: Client,
     hot_wallet_obj: HotWallet,
     hot_wallet_usdc_account: Pubkey,
-    usdc: AssetIdentifier,
+    usdc_asset: AssetIdentifier,
     usdc_token: Token,
     payer: Keypair,
     payer_usdc_account: Pubkey,
@@ -58,7 +58,7 @@ def test_hot_wallet_sync_model_deposit(
     state = State()
     sync_model.sync_initial(state)
 
-    supported_reserves = [usdc]
+    supported_reserves = [usdc_asset]
 
     sync_model.sync_treasury(
         datetime.datetime.utcnow(),
@@ -97,7 +97,7 @@ def test_hot_wallet_sync_model_sync_twice(
     client: Client,
     hot_wallet_obj: HotWallet,
     hot_wallet_usdc_account: Pubkey,
-    usdc: AssetIdentifier,
+    usdc_asset: AssetIdentifier,
     usdc_token: Token,
     payer: Keypair,
     payer_usdc_account: Pubkey
@@ -108,7 +108,7 @@ def test_hot_wallet_sync_model_sync_twice(
     state = State()
     sync_model.sync_initial(state)
 
-    supported_reserves = [usdc]
+    supported_reserves = [usdc_asset]
 
     sync_model.sync_treasury(
         datetime.datetime.utcnow(),
