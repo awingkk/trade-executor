@@ -52,6 +52,10 @@ def _launch(cmd: str, args_list: list) -> tuple[psutil.Popen, list[str]]:
     logger.info("Launching Test Validator: %s", final_cmd_str)
     out = DEVNULL if sys.platform == "win32" else PIPE
     env = os.environ.copy()
+    proxy = os.environ.get("WEB3_RPC_PROXY")
+    if proxy is not None:
+        env["http_proxy"] = proxy
+        env["https_proxy"] = proxy
     return psutil.Popen(cmd_list, stdout=out, stderr=out, env=env), cmd_list
 
 
@@ -210,7 +214,7 @@ def launch_test_validator(
                 raise
 
         if latest_slot is None:
-            logger.error("Could not read the latest block from Test Validator %s within %f seconds, shutting down and dumping output", url, launch_wait_seconds)
+            logger.error("Could not launch Test Validator %s within %f seconds, shutting down and dumping output", url, launch_wait_seconds)
             stdout, stderr = shutdown_hard(
                 process,
                 log_level=logging.ERROR,
