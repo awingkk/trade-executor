@@ -124,7 +124,7 @@ telegram-bot-logger = {git = "https://github.com/tradingstrategy-ai/telegram_bot
 #
 solana = "^0.35.1"
 solders = "^0.21.0"
-
+soldexpy = {path = "deps/soldexpy", develop = true}
 
 [tool.poetry.extras]
 

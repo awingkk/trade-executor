@@ -10,3 +10,6 @@
 	path = deps/web3-ethereum-defi
 	url = https://github.com/awingkk/web3-ethereum-defi.git
 	ignore = dirty
+[submodule "deps/soldexpy"]
+	path = deps/soldexpy
+	url = https://github.com/awingkk/soldexpy.git
