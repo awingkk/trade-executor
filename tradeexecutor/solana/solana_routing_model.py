@@ -16,7 +16,7 @@ from tradeexecutor.strategy.trading_strategy_universe import TradingStrategyUniv
 from tradingstrategy.pair import PandasPairUniverse
 
 from tradeexecutor.strategy.universe_model import StrategyExecutionUniverse
-from tradeexecutor.solana.raydium.raydium_routing_state import RaydiumRoutingState
+from tradeexecutor.solana.solana_routing_state import SolanaRoutingState
 from tradeexecutor.utils.slippage import get_slippage_in_bps
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_SLIPPAGE_TOLERANCE: Percent = 0.01
 
 
-class RaydiumRoutingModel(RoutingModel):
-    """A simple router that does not optimise the trade execution cost. Designed for Raydium.
+class SolanaRoutingModel(RoutingModel):
+    """A simple router that does not optimise the trade execution cost.
 
     - Able to trade on multiple exchanges
 
@@ -67,7 +67,7 @@ class RaydiumRoutingModel(RoutingModel):
 
 
     def make_direct_trade(self,
-                          routing_state: RaydiumRoutingState,
+                          routing_state: SolanaRoutingState,
                           target_pair: TradingPairIdentifier,
                           reserve_asset: AssetIdentifier,
                           reserve_amount: int,
@@ -85,8 +85,6 @@ class RaydiumRoutingModel(RoutingModel):
         :return:
             List of approval transactions (if any needed)
         """
-        pool = routing_state.get_pool_for_pair(target_pair)
-
         adjusted_reserve_amount = routing_state.adjust_spend(
             reserve_asset,
             reserve_amount,
@@ -105,7 +103,6 @@ class RaydiumRoutingModel(RoutingModel):
         get_slippage_in_bps(max_slippage)
 
         trade_txs = routing_state.trade_on_router_two_way(
-            pool,
             target_pair,
             reserve_asset,
             adjusted_reserve_amount,
@@ -264,7 +261,7 @@ class RaydiumRoutingModel(RoutingModel):
     '''
 
     def trade(self,
-              routing_state: RaydiumRoutingState,
+              routing_state: SolanaRoutingState,
               target_pair: TradingPairIdentifier,
               reserve_asset: AssetIdentifier,
               reserve_asset_amount: int,  # Raw amount of the reserve asset
@@ -479,7 +476,7 @@ class RaydiumRoutingModel(RoutingModel):
 
     def setup_trades(
             self,
-            routing_state: RaydiumRoutingState,
+            routing_state: SolanaRoutingState,
             trades: List[TradeExecution],
             check_balances=False,
             rebroadcast=False,
@@ -513,11 +510,11 @@ class RaydiumRoutingModel(RoutingModel):
     def create_routing_state(self,
                              universe: StrategyExecutionUniverse,
                              execution_details: dict,
-                             Routing_State: Type[RaydiumRoutingState] 
+                             Routing_State: Type[SolanaRoutingState] 
                              # Doesn't get full typing
                              # Type[UniswapV2RoutingState] | Type[UniswapV3RoutingState]
                              # throws error due to circular import
-                             ) -> RaydiumRoutingState:
+                             ) -> SolanaRoutingState:
         """Create a new routing state for this cycle.
 
         - Connect routing to web3 and hot wallet

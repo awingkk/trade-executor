@@ -7,14 +7,13 @@ import pytest
 from decimal import Decimal
 
 from solders.pubkey import Pubkey
-from soldexpy.common.reference_address import RAYDIUM_LIQUIDITY_POOL_V4
 from spl.token.client import Token
 from spl.token.constants import TOKEN_PROGRAM_ID
 from solana_utils import assert_valid_response, OPTS
 
 from tradeexecutor.solana.hot_wallet import HotWallet
 from tradeexecutor.solana.tx import HotWalletTransactionBuilder
-from tradeexecutor.solana.raydium.raydium_routing_state import RaydiumRoutingState
+from tradeexecutor.solana.jupiter.jupiter_routing_state import JupiterRoutingState
 from tradeexecutor.solana.solana_routing_model import SolanaRoutingModel
 from tradeexecutor.state.identifier import AssetIdentifier, TradingPairIdentifier
 from tradeexecutor.strategy.trading_strategy_universe import (
@@ -47,8 +46,8 @@ def sol_usdc_trading_pair(sol_asset, usdc_asset) -> TradingPairIdentifier:
     return TradingPairIdentifier(
         sol_asset,
         usdc_asset,
-        "58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2",
-        exchange_address=RAYDIUM_LIQUIDITY_POOL_V4,
+        "???",
+        exchange_address="",
         internal_id=1000,  # random number
         internal_exchange_id=1000,  # random number
         fee=0.0001
@@ -61,8 +60,8 @@ def ray_usdc_trading_pair(ray_asset, usdc_asset) -> TradingPairIdentifier:
     return TradingPairIdentifier(
         ray_asset,
         usdc_asset,
-        "6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg",
-        exchange_address=RAYDIUM_LIQUIDITY_POOL_V4,
+        "???",
+        exchange_address="",
         internal_id=1001,  # random number
         internal_exchange_id=1000,  # random number
         fee=0.0025
@@ -75,8 +74,8 @@ def ray_sol_trading_pair(ray_asset, sol_asset) -> TradingPairIdentifier:
     return TradingPairIdentifier(
         ray_asset,
         sol_asset,
-        "AVs9TA4nWDzfPJE9gGVNJMVhcQy3V9PGazuz33BfG2RA",
-        exchange_address=RAYDIUM_LIQUIDITY_POOL_V4,
+        "???",
+        exchange_address="",
         internal_id=1002,  # random number
         internal_exchange_id=1000,  # random number
         fee=0.0025
@@ -107,7 +106,7 @@ def routing_model(usdc_asset):
 
 # Flaky because Ganache hangs
 @flaky.flaky()
-def test_raydium_routing_one_leg(
+def test_jupiter_routing_one_leg(
     client,
     wallet1,
     sol_asset,
@@ -141,7 +140,8 @@ def test_raydium_routing_one_leg(
     )
 
     # Create
-    routing_state = RaydiumRoutingState(pair_universe, tx_builder=tx_builder)
+    routing_state = JupiterRoutingState(pair_universe, tx_builder=tx_builder)
+    routing_state.set_dex_routes(["Raydium"])
 
     txs = routing_model.trade(
         routing_state,

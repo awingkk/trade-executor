@@ -64,7 +64,7 @@ def sol_asset() -> AssetIdentifier:
     sol_mint = "So11111111111111111111111111111111111111112"
     key = Pubkey.from_string(sol_mint)
     sol_hex = "0x" + bytes(key).hex()
-    a = AssetIdentifier(102, sol_hex, "SOL", 18)
+    a = AssetIdentifier(102, sol_hex, "SOL", 9)
     a.other_data["Pubkey"] = key
     return a
 
@@ -105,7 +105,8 @@ def clone_accounts():
 @pytest.fixture()
 def clone_programs():
     return [
-        "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8" # Raydium Liquidity Pool V4
+        "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8", # Raydium Liquidity Pool V4
+        "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",  # Jupiter Aggregator v6
     ]
 
 
