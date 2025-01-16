@@ -13,3 +13,6 @@
 [submodule "deps/soldexpy"]
 	path = deps/soldexpy
 	url = https://github.com/awingkk/soldexpy.git
+[submodule "deps/jupiter-python-sdk"]
+	path = deps/jupiter-python-sdk
+	url = https://github.com/awingkk/jupiter-python-sdk.git

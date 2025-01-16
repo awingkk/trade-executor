@@ -122,9 +122,10 @@ telegram-bot-logger = {git = "https://github.com/tradingstrategy-ai/telegram_bot
 #
 # Solana
 #
-solana = "^0.35.1"
-solders = "^0.21.0"
+solana = "^0.36.2"
+solders = "^0.23.0"
 soldexpy = {path = "deps/soldexpy", develop = true}
+jupiter-python-sdk = {path = "deps/jupiter-python-sdk", develop = true}
 
 [tool.poetry.extras]
 
